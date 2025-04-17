@@ -19,6 +19,7 @@ import (
 
 	"github.com/Layr-Labs/eigenlayer-contracts/pkg/bindings/EigenPod"
 	eigenpodproofs "github.com/Layr-Labs/eigenpod-proofs-generation"
+	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNodesManager"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -153,7 +154,31 @@ func StartCheckpoint(ctx context.Context, eigenpodAddress string, ownerPrivateKe
 
 	revertIfNoBalance := !forceCheckpoint
 
-	txn, err := eigenPod.StartCheckpoint(ownerAccount.TransactionOptions, revertIfNoBalance)
+	// manually pack tx data since we are forwarding the call via the etherfiNodesManager
+	eigenPodABI, err := EigenPod.EigenPodMetaData.GetAbi()
+	if err != nil {
+		return nil, fmt.Errorf("fetching abi: %w", err)
+	}
+	calldata, err := eigenPodABI.Pack("startCheckpoint", revertIfNoBalance)
+	if err != nil {
+		return nil, fmt.Errorf("packing startCheckpoint: %w", err)
+	}
+
+	// hardcoded to mainnet for now
+	etherfiNodesManager, err := EtherFiNodesManager.NewEtherFiNodesManager(common.HexToAddress("0x8b71140ad2e5d1e7018d2a7f8a288bd3cd38916f"), eth)
+	if err != nil {
+		return nil, fmt.Errorf("binding etherfiNodesManager: %w", err)
+	}
+
+	// look up etherfiNode address which happens to be eigenpod.podOwner()
+	etherfiNode, err := eigenPod.PodOwner(nil)
+	if err != nil {
+		return nil, fmt.Errorf("looking up podOwner: %w", err)
+	}
+	nodeAddrs := []common.Address{etherfiNode}
+	data := [][]byte{calldata}
+
+	txn, err := etherfiNodesManager.ForwardEigenpodCall0(ownerAccount.TransactionOptions, nodeAddrs, data)
 	if err != nil {
 		if !forceCheckpoint {
 			return nil, fmt.Errorf("failed to start checkpoint (try running again with `--force`): %w", err)
