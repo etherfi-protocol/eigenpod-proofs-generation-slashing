@@ -11,7 +11,7 @@ import (
 
 	"github.com/Layr-Labs/eigenlayer-contracts/pkg/bindings/EigenPod"
 	eigenpodproofs "github.com/Layr-Labs/eigenpod-proofs-generation"
-	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNodesManager"
+	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNode"
 	"github.com/Layr-Labs/eigenpod-proofs-generation/cli/core/utils"
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -91,7 +91,7 @@ func SubmitCheckpointProofBatch(ctx context.Context, owner, eigenpodAddress stri
 	})
 	defer tracing.OnEndSection()
 
-	// manually pack tx data since we are forwarding the call via the etherfiNodesManager
+	// manually pack tx data since we are forwarding the call via the etherfiNode
 	eigenPodABI, err := EigenPod.EigenPodMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("fetching abi: %w", err)
@@ -107,21 +107,17 @@ func SubmitCheckpointProofBatch(ctx context.Context, owner, eigenpodAddress stri
 		return nil, fmt.Errorf("packing verifyCheckpointProofs: %w", err)
 	}
 
-	// hardcoded to mainnet for now
-	etherfiNodesManager, err := EtherFiNodesManager.NewEtherFiNodesManager(common.HexToAddress("0x8b71140ad2e5d1e7018d2a7f8a288bd3cd38916f"), eth)
-	if err != nil {
-		return nil, fmt.Errorf("binding etherfiNodesManager: %w", err)
-	}
-
 	// look up etherfiNode address which happens to be eigenpod.podOwner()
-	etherfiNode, err := eigenPod.PodOwner(nil)
+	etherfiNodeAddr, err := eigenPod.PodOwner(nil)
 	if err != nil {
 		return nil, fmt.Errorf("looking up podOwner: %w", err)
 	}
-	nodeAddrs := []common.Address{etherfiNode}
-	data := [][]byte{calldata}
+	etherFiNode, err := EtherFiNode.NewEtherFiNode(etherfiNodeAddr, eth)
+	if err != nil {
+		return nil, fmt.Errorf("binding etherFiNode: %w", err)
+	}
 
-	txn, err := etherfiNodesManager.ForwardEigenpodCall0(ownerAccount.TransactionOptions, nodeAddrs, data)
+	txn, err := etherFiNode.ForwardEigenPodCall(ownerAccount.TransactionOptions, calldata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit checkpoint proofs: %w", err)
 	}
