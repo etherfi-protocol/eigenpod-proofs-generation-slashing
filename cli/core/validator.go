@@ -12,7 +12,7 @@ import (
 
 	"github.com/Layr-Labs/eigenlayer-contracts/pkg/bindings/EigenPod"
 	eigenpodproofs "github.com/Layr-Labs/eigenpod-proofs-generation"
-	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNode"
+	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNodesManager"
 	"github.com/Layr-Labs/eigenpod-proofs-generation/cli/core/utils"
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -105,7 +105,7 @@ func SubmitValidatorProofChunk(ctx context.Context, ownerAccount *utils.Owner, e
 	if verbose {
 		color.Green("submitting...")
 	}
-	// manually pack tx data since we are forwarding the call via the etherfiNode
+	// manually pack tx data since we are forwarding the call via the etherfiNodesManager
 	eigenPodABI, err := EigenPod.EigenPodMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("fetching abi: %w", err)
@@ -130,12 +130,12 @@ func SubmitValidatorProofChunk(ctx context.Context, ownerAccount *utils.Owner, e
 	if err != nil {
 		return nil, fmt.Errorf("looking up podOwner: %w", err)
 	}
-	etherFiNode, err := EtherFiNode.NewEtherFiNode(etherfiNodeAddr, eth)
+	etherFiNodesManager, err := EtherFiNodesManager.NewEtherFiNodesManager(common.HexToAddress("0x8B71140AD2e5d1E7018d2a7f8a288BD3CD38916F"), eth) // TODO: hardcoded to mainnet
 	if err != nil {
 		return nil, fmt.Errorf("binding etherFiNode: %w", err)
 	}
 
-	txn, err := etherFiNode.ForwardEigenPodCall(ownerAccount.TransactionOptions, calldata)
+	txn, err := etherFiNodesManager.ForwardEigenPodCall(ownerAccount.TransactionOptions, []common.Address{etherfiNodeAddr}, [][]byte{calldata})
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit verifyWithdrawalCredentials: %w", err)
 	}

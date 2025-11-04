@@ -60,9 +60,21 @@ type IDelegationManagerTypesWithdrawal struct {
 	ScaledShares []*big.Int
 }
 
+// IEigenPodTypesConsolidationRequest is an auto generated low-level Go binding around an user-defined struct.
+type IEigenPodTypesConsolidationRequest struct {
+	SrcPubkey    []byte
+	TargetPubkey []byte
+}
+
+// IEigenPodTypesWithdrawalRequest is an auto generated low-level Go binding around an user-defined struct.
+type IEigenPodTypesWithdrawalRequest struct {
+	Pubkey     []byte
+	AmountGwei uint64
+}
+
 // EtherFiNodeMetaData contains all meta data concerning the EtherFiNode contract.
 var EtherFiNodeMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_liquidityPool\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_etherFiNodesManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_eigenPodManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_roleRegistry\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"fallback\",\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"EIGENLAYER_WITHDRAWAL_DELAY_BLOCKS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"ETHERFI_NODE_CALL_FORWARDER_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"completeQueuedETHWithdrawals\",\"inputs\":[{\"name\":\"receiveAsTokens\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"completeQueuedWithdrawals\",\"inputs\":[{\"name\":\"withdrawals\",\"type\":\"tuple[]\",\"internalType\":\"structIDelegationManagerTypes.Withdrawal[]\",\"components\":[{\"name\":\"staker\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"delegatedTo\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"withdrawer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"nonce\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"startBlock\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"strategies\",\"type\":\"address[]\",\"internalType\":\"contractIStrategy[]\"},{\"name\":\"scaledShares\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"}]},{\"name\":\"tokens\",\"type\":\"address[][]\",\"internalType\":\"contractIERC20[][]\"},{\"name\":\"receiveAsTokens\",\"type\":\"bool[]\",\"internalType\":\"bool[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createEigenPod\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"eigenPodManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenPodManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"etherFiNodesManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEtherFiNodesManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"forwardEigenPodCall\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"forwardExternalCall\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getEigenPod\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenPod\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"liquidityPool\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractILiquidityPool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"queueETHWithdrawal\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"withdrawalRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"queueWithdrawals\",\"inputs\":[{\"name\":\"params\",\"type\":\"tuple[]\",\"internalType\":\"structIDelegationManagerTypes.QueuedWithdrawalParams[]\",\"components\":[{\"name\":\"strategies\",\"type\":\"address[]\",\"internalType\":\"contractIStrategy[]\"},{\"name\":\"depositShares\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"},{\"name\":\"__deprecated_withdrawer\",\"type\":\"address\",\"internalType\":\"address\"}]}],\"outputs\":[{\"name\":\"withdrawalRoots\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"roleRegistry\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIRoleRegistry\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setProofSubmitter\",\"inputs\":[{\"name\":\"_newProofSubmitter\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startCheckpoint\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweepFunds\",\"inputs\":[],\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"verifyCheckpointProofs\",\"inputs\":[{\"name\":\"balanceContainerProof\",\"type\":\"tuple\",\"internalType\":\"structBeaconChainProofs.BalanceContainerProof\",\"components\":[{\"name\":\"balanceContainerRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"proof\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"proofs\",\"type\":\"tuple[]\",\"internalType\":\"structBeaconChainProofs.BalanceProof[]\",\"components\":[{\"name\":\"pubkeyHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"balanceRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"proof\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"FullWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"toOperator\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toBnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTreasury\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"FundsTransferred\",\"inputs\":[{\"name\":\"recipient\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"PartialWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"toOperator\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toBnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTreasury\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"QueuedRestakingWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"withdrawalRoots\",\"type\":\"bytes32[]\",\"indexed\":false,\"internalType\":\"bytes32[]\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"ForwardedCallNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"IncorrectRole\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidForwardedCall\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"TransferFailed\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_liquidityPool\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_etherFiNodesManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_eigenPodManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_roleRegistry\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"fallback\",\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"BEACON_ETH_STRATEGY_ADDRESS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"EIGENLAYER_WITHDRAWAL_DELAY_BLOCKS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"completeQueuedETHWithdrawals\",\"inputs\":[{\"name\":\"receiveAsTokens\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"completeQueuedWithdrawals\",\"inputs\":[{\"name\":\"withdrawals\",\"type\":\"tuple[]\",\"internalType\":\"structIDelegationManagerTypes.Withdrawal[]\",\"components\":[{\"name\":\"staker\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"delegatedTo\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"withdrawer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"nonce\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"startBlock\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"strategies\",\"type\":\"address[]\",\"internalType\":\"contractIStrategy[]\"},{\"name\":\"scaledShares\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"}]},{\"name\":\"tokens\",\"type\":\"address[][]\",\"internalType\":\"contractIERC20[][]\"},{\"name\":\"receiveAsTokens\",\"type\":\"bool[]\",\"internalType\":\"bool[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createEigenPod\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"eigenPodManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenPodManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"etherFiNodesManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEtherFiNodesManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"forwardEigenPodCall\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"forwardExternalCall\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getEigenPod\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenPod\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"liquidityPool\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractILiquidityPool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"queueETHWithdrawal\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"withdrawalRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"queueWithdrawals\",\"inputs\":[{\"name\":\"params\",\"type\":\"tuple[]\",\"internalType\":\"structIDelegationManagerTypes.QueuedWithdrawalParams[]\",\"components\":[{\"name\":\"strategies\",\"type\":\"address[]\",\"internalType\":\"contractIStrategy[]\"},{\"name\":\"depositShares\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"},{\"name\":\"__deprecated_withdrawer\",\"type\":\"address\",\"internalType\":\"address\"}]}],\"outputs\":[{\"name\":\"withdrawalRoots\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"requestConsolidation\",\"inputs\":[{\"name\":\"requests\",\"type\":\"tuple[]\",\"internalType\":\"structIEigenPodTypes.ConsolidationRequest[]\",\"components\":[{\"name\":\"srcPubkey\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"targetPubkey\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"requestExecutionLayerTriggeredWithdrawal\",\"inputs\":[{\"name\":\"requests\",\"type\":\"tuple[]\",\"internalType\":\"structIEigenPodTypes.WithdrawalRequest[]\",\"components\":[{\"name\":\"pubkey\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"amountGwei\",\"type\":\"uint64\",\"internalType\":\"uint64\"}]}],\"outputs\":[],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"roleRegistry\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIRoleRegistry\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setProofSubmitter\",\"inputs\":[{\"name\":\"_newProofSubmitter\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startCheckpoint\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweepFunds\",\"inputs\":[],\"outputs\":[{\"name\":\"balance\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"verifyCheckpointProofs\",\"inputs\":[{\"name\":\"balanceContainerProof\",\"type\":\"tuple\",\"internalType\":\"structBeaconChainProofs.BalanceContainerProof\",\"components\":[{\"name\":\"balanceContainerRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"proof\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"proofs\",\"type\":\"tuple[]\",\"internalType\":\"structBeaconChainProofs.BalanceProof[]\",\"components\":[{\"name\":\"pubkeyHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"balanceRoot\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"proof\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"FullWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"toOperator\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toBnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTreasury\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"FundsTransferred\",\"inputs\":[{\"name\":\"recipient\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"PartialWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"toOperator\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toBnft\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"toTreasury\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"QueuedRestakingWithdrawal\",\"inputs\":[{\"name\":\"_validatorId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"etherFiNode\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"withdrawalRoots\",\"type\":\"bytes32[]\",\"indexed\":false,\"internalType\":\"bytes32[]\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"ForwardedCallNotAllowed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"IncorrectRole\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidCaller\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidForwardedCall\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NoCompleteableWithdrawals\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"TransferFailed\",\"inputs\":[]}]",
 }
 
 // EtherFiNodeABI is the input ABI used to generate the binding from.
@@ -211,6 +223,37 @@ func (_EtherFiNode *EtherFiNodeTransactorRaw) Transact(opts *bind.TransactOpts, 
 	return _EtherFiNode.Contract.contract.Transact(opts, method, params...)
 }
 
+// BEACONETHSTRATEGYADDRESS is a free data retrieval call binding the contract method 0xf4c0757b.
+//
+// Solidity: function BEACON_ETH_STRATEGY_ADDRESS() view returns(address)
+func (_EtherFiNode *EtherFiNodeCaller) BEACONETHSTRATEGYADDRESS(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _EtherFiNode.contract.Call(opts, &out, "BEACON_ETH_STRATEGY_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// BEACONETHSTRATEGYADDRESS is a free data retrieval call binding the contract method 0xf4c0757b.
+//
+// Solidity: function BEACON_ETH_STRATEGY_ADDRESS() view returns(address)
+func (_EtherFiNode *EtherFiNodeSession) BEACONETHSTRATEGYADDRESS() (common.Address, error) {
+	return _EtherFiNode.Contract.BEACONETHSTRATEGYADDRESS(&_EtherFiNode.CallOpts)
+}
+
+// BEACONETHSTRATEGYADDRESS is a free data retrieval call binding the contract method 0xf4c0757b.
+//
+// Solidity: function BEACON_ETH_STRATEGY_ADDRESS() view returns(address)
+func (_EtherFiNode *EtherFiNodeCallerSession) BEACONETHSTRATEGYADDRESS() (common.Address, error) {
+	return _EtherFiNode.Contract.BEACONETHSTRATEGYADDRESS(&_EtherFiNode.CallOpts)
+}
+
 // EIGENLAYERWITHDRAWALDELAYBLOCKS is a free data retrieval call binding the contract method 0xb9da1262.
 //
 // Solidity: function EIGENLAYER_WITHDRAWAL_DELAY_BLOCKS() view returns(uint32)
@@ -240,68 +283,6 @@ func (_EtherFiNode *EtherFiNodeSession) EIGENLAYERWITHDRAWALDELAYBLOCKS() (uint3
 // Solidity: function EIGENLAYER_WITHDRAWAL_DELAY_BLOCKS() view returns(uint32)
 func (_EtherFiNode *EtherFiNodeCallerSession) EIGENLAYERWITHDRAWALDELAYBLOCKS() (uint32, error) {
 	return _EtherFiNode.Contract.EIGENLAYERWITHDRAWALDELAYBLOCKS(&_EtherFiNode.CallOpts)
-}
-
-// ETHERFINODECALLFORWARDERROLE is a free data retrieval call binding the contract method 0xb62ab426.
-//
-// Solidity: function ETHERFI_NODE_CALL_FORWARDER_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeCaller) ETHERFINODECALLFORWARDERROLE(opts *bind.CallOpts) ([32]byte, error) {
-	var out []interface{}
-	err := _EtherFiNode.contract.Call(opts, &out, "ETHERFI_NODE_CALL_FORWARDER_ROLE")
-
-	if err != nil {
-		return *new([32]byte), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-
-	return out0, err
-
-}
-
-// ETHERFINODECALLFORWARDERROLE is a free data retrieval call binding the contract method 0xb62ab426.
-//
-// Solidity: function ETHERFI_NODE_CALL_FORWARDER_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeSession) ETHERFINODECALLFORWARDERROLE() ([32]byte, error) {
-	return _EtherFiNode.Contract.ETHERFINODECALLFORWARDERROLE(&_EtherFiNode.CallOpts)
-}
-
-// ETHERFINODECALLFORWARDERROLE is a free data retrieval call binding the contract method 0xb62ab426.
-//
-// Solidity: function ETHERFI_NODE_CALL_FORWARDER_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeCallerSession) ETHERFINODECALLFORWARDERROLE() ([32]byte, error) {
-	return _EtherFiNode.Contract.ETHERFINODECALLFORWARDERROLE(&_EtherFiNode.CallOpts)
-}
-
-// ETHERFINODEEIGENLAYERADMINROLE is a free data retrieval call binding the contract method 0xc587d7ab.
-//
-// Solidity: function ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeCaller) ETHERFINODEEIGENLAYERADMINROLE(opts *bind.CallOpts) ([32]byte, error) {
-	var out []interface{}
-	err := _EtherFiNode.contract.Call(opts, &out, "ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE")
-
-	if err != nil {
-		return *new([32]byte), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-
-	return out0, err
-
-}
-
-// ETHERFINODEEIGENLAYERADMINROLE is a free data retrieval call binding the contract method 0xc587d7ab.
-//
-// Solidity: function ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeSession) ETHERFINODEEIGENLAYERADMINROLE() ([32]byte, error) {
-	return _EtherFiNode.Contract.ETHERFINODEEIGENLAYERADMINROLE(&_EtherFiNode.CallOpts)
-}
-
-// ETHERFINODEEIGENLAYERADMINROLE is a free data retrieval call binding the contract method 0xc587d7ab.
-//
-// Solidity: function ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE() view returns(bytes32)
-func (_EtherFiNode *EtherFiNodeCallerSession) ETHERFINODEEIGENLAYERADMINROLE() ([32]byte, error) {
-	return _EtherFiNode.Contract.ETHERFINODEEIGENLAYERADMINROLE(&_EtherFiNode.CallOpts)
 }
 
 // DelegationManager is a free data retrieval call binding the contract method 0xea4d3c9b.
@@ -635,6 +616,48 @@ func (_EtherFiNode *EtherFiNodeSession) QueueWithdrawals(params []IDelegationMan
 // Solidity: function queueWithdrawals((address[],uint256[],address)[] params) returns(bytes32[] withdrawalRoots)
 func (_EtherFiNode *EtherFiNodeTransactorSession) QueueWithdrawals(params []IDelegationManagerTypesQueuedWithdrawalParams) (*types.Transaction, error) {
 	return _EtherFiNode.Contract.QueueWithdrawals(&_EtherFiNode.TransactOpts, params)
+}
+
+// RequestConsolidation is a paid mutator transaction binding the contract method 0x6691954e.
+//
+// Solidity: function requestConsolidation((bytes,bytes)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeTransactor) RequestConsolidation(opts *bind.TransactOpts, requests []IEigenPodTypesConsolidationRequest) (*types.Transaction, error) {
+	return _EtherFiNode.contract.Transact(opts, "requestConsolidation", requests)
+}
+
+// RequestConsolidation is a paid mutator transaction binding the contract method 0x6691954e.
+//
+// Solidity: function requestConsolidation((bytes,bytes)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeSession) RequestConsolidation(requests []IEigenPodTypesConsolidationRequest) (*types.Transaction, error) {
+	return _EtherFiNode.Contract.RequestConsolidation(&_EtherFiNode.TransactOpts, requests)
+}
+
+// RequestConsolidation is a paid mutator transaction binding the contract method 0x6691954e.
+//
+// Solidity: function requestConsolidation((bytes,bytes)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeTransactorSession) RequestConsolidation(requests []IEigenPodTypesConsolidationRequest) (*types.Transaction, error) {
+	return _EtherFiNode.Contract.RequestConsolidation(&_EtherFiNode.TransactOpts, requests)
+}
+
+// RequestExecutionLayerTriggeredWithdrawal is a paid mutator transaction binding the contract method 0xc390d8f5.
+//
+// Solidity: function requestExecutionLayerTriggeredWithdrawal((bytes,uint64)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeTransactor) RequestExecutionLayerTriggeredWithdrawal(opts *bind.TransactOpts, requests []IEigenPodTypesWithdrawalRequest) (*types.Transaction, error) {
+	return _EtherFiNode.contract.Transact(opts, "requestExecutionLayerTriggeredWithdrawal", requests)
+}
+
+// RequestExecutionLayerTriggeredWithdrawal is a paid mutator transaction binding the contract method 0xc390d8f5.
+//
+// Solidity: function requestExecutionLayerTriggeredWithdrawal((bytes,uint64)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeSession) RequestExecutionLayerTriggeredWithdrawal(requests []IEigenPodTypesWithdrawalRequest) (*types.Transaction, error) {
+	return _EtherFiNode.Contract.RequestExecutionLayerTriggeredWithdrawal(&_EtherFiNode.TransactOpts, requests)
+}
+
+// RequestExecutionLayerTriggeredWithdrawal is a paid mutator transaction binding the contract method 0xc390d8f5.
+//
+// Solidity: function requestExecutionLayerTriggeredWithdrawal((bytes,uint64)[] requests) payable returns()
+func (_EtherFiNode *EtherFiNodeTransactorSession) RequestExecutionLayerTriggeredWithdrawal(requests []IEigenPodTypesWithdrawalRequest) (*types.Transaction, error) {
+	return _EtherFiNode.Contract.RequestExecutionLayerTriggeredWithdrawal(&_EtherFiNode.TransactOpts, requests)
 }
 
 // SetProofSubmitter is a paid mutator transaction binding the contract method 0xd06d5587.
