@@ -22,6 +22,7 @@ import (
 	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNodesManager"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,6 +40,36 @@ const (
 	ValidatorStatusWithdrawn = 2
 )
 
+const (
+	BLSWithdrawalPrefix         = 0
+	ETH1WithdrawalPrefix        = 1
+	CompoundingWithdrawalPrefix = 2
+)
+
+// Constants defined in predeploy EIPs:
+// - EIP-7521: https://eips.ethereum.org/EIPS/eip-7251#constants
+// - EIP-7002: https://eips.ethereum.org/EIPS/eip-7002#configuration
+var (
+	CONSOLIDATION_PREDEPLOY = common.HexToAddress("0x0000BBdDc7CE488642fb579F8B00f3a590007251")
+	WITHDRAWAL_PREDEPLOY    = common.HexToAddress("0x00000961Ef480Eb55e80D19ad83579A64c007002")
+
+	// 2**256 - 1
+	EXCESS_INHIBITOR = new(big.Int).Sub(
+		new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil),
+		big.NewInt(1),
+	)
+
+	// Consolidation constants
+	MAX_CONSOLIDATION_REQUESTS_PER_BLOCK      = big.NewInt(2)
+	MIN_CONSOLIDATION_REQUEST_FEE             = big.NewInt(1)
+	CONSOLIDATION_REQUEST_FEE_UPDATE_FRACTION = big.NewInt(17)
+
+	// Withdrawal constants
+	MAX_WITHDRAWAL_REQUESTS_PER_BLOCK      = big.NewInt(16)
+	MIN_WITHDRAWAL_REQUEST_FEE             = big.NewInt(1)
+	WITHDRAWAL_REQUEST_FEE_UPDATE_FRACTION = big.NewInt(17)
+)
+
 type Checkpoint struct {
 	ProofsRemaining uint64
 	StartedAt       uint64
@@ -53,6 +84,19 @@ type Validator struct {
 	IsAwaitingWithdrawalCredentialProof bool
 	EffectiveBalance                    uint64
 	CurrentBalance                      uint64
+	WithdrawalPrefix                    uint8
+}
+
+type Predeploy struct {
+	Address common.Address
+	Caller  bind.ContractCaller
+}
+
+func newPredeploy(address common.Address, backend bind.ContractBackend) *Predeploy {
+	return &Predeploy{
+		address,
+		backend,
+	}
 }
 
 func Panic(message string) {
@@ -115,6 +159,11 @@ func Chunk[T any](arr []T, chunkSize uint64) [][]T {
 	}
 
 	return chunks
+}
+
+type ConsolidatableValidatorSet struct {
+	Sources []ValidatorWithIndex
+	Targets []ValidatorWithIndex
 }
 
 type ValidatorWithIndex = struct {
@@ -263,6 +312,38 @@ func GetCheckpointTimestampAndBeaconState(
 	tracing.OnEndSection()
 
 	return checkpointTimestamp, beaconState, nil
+}
+
+func GetBeaconHeadState(ctx context.Context, beaconClient BeaconClient) (*spec.VersionedBeaconState, error) {
+	tracing := GetContextTracingCallbacks(ctx)
+
+	tracing.OnStartSection("GetBeaconHeadState", map[string]string{})
+	headState, err := beaconClient.GetBeaconState(ctx, "head")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch beacon state: %w", err)
+	}
+	tracing.OnEndSection()
+
+	return headState, nil
+}
+
+// GetEigenPodValidatorsByIndex looks up all validators for an eigenpod and returns a map
+// from validator index to validator info
+func GetEigenPodValidatorsByIndex(
+	eigenpodAddress string,
+	beaconState *spec.VersionedBeaconState,
+) (map[uint64]*phase0.Validator, error) {
+	allValidatorsForEigenPod, err := FindAllValidatorsForEigenpod(eigenpodAddress, beaconState)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch validators for eigenpod: %w", err)
+	}
+
+	allValidatorsMap := make(map[uint64]*phase0.Validator)
+	for _, v := range allValidatorsForEigenPod {
+		allValidatorsMap[v.Index] = v.Validator
+	}
+
+	return allValidatorsMap, nil
 }
 
 func SortByStatus(validators map[string]Validator) ([]Validator, []Validator, []Validator, []Validator) {
@@ -463,6 +544,7 @@ func IsAwaitingWithdrawalCredentialProof(validatorInfo EigenPod.IEigenPodTypesVa
 func ForkVersions() map[uint64]string {
 	return map[uint64]string{
 		11155111: "90000069", //sepolia (https://github.com/eth-clients/sepolia/blob/main/README.md?plain=1#L66C26-L66C36)
+		560048:   "10000910", //hoodi (https://github.com/eth-clients/hoodi/blob/main/README.md)
 		17000:    "01017000", //holesky (https://github.com/eth-clients/holesky/blob/main/README.md)
 		1:        "00000000", // mainnet (https://github.com/eth-clients/mainnet)
 	}
@@ -479,8 +561,8 @@ func GetEthClient(ctx context.Context, node string) (*ethclient.Client, *big.Int
 		return nil, nil, fmt.Errorf("failed to fetch chain id: %w", err)
 	}
 
-	if chainId == nil || (chainId.Int64() != 17000 && chainId.Int64() != 1) {
-		return nil, nil, errors.New("this tool only supports the Holesky and Mainnet Ethereum Networks")
+	if chainId == nil || (chainId.Int64() != 17000 && chainId.Int64() != 1 && chainId.Int64() != 560048) {
+		return nil, nil, errors.New("this tool only supports the Holesky, Hoodi, and Mainnet Ethereum Networks")
 	}
 	return eth, chainId, nil
 }
@@ -534,52 +616,30 @@ func PanicIfNoConsent(prompt string) {
 }
 
 func PrepareAccount(owner *string, chainID *big.Int, noSend bool) (*Owner, error) {
-	if noSend {
-		isSimulatingGas := owner != nil && *owner != ""
-		var senderPk = func() string {
-			if owner == nil || *owner == "" {
-				return "372d94b8645091147a5dfc10a454d0d539773d2431293bf0a195b44fa5ddbb33" // this is a RANDOM private key. Do not use this for anything.
+	isSimulatingGas := owner != nil && *owner != ""
+	senderPk, err := func() (string, error) {
+		// if we're trying to send a transaction, make sure we were supplied a private key
+		if owner == nil || *owner == "" {
+			if !noSend {
+				return "", errors.New("no private key supplied")
 			}
-			return *owner
-		}()
 
-		privateKey, err := crypto.HexToECDSA(senderPk)
-		if err != nil {
-			return nil, err
+			return "372d94b8645091147a5dfc10a454d0d539773d2431293bf0a195b44fa5ddbb33", nil // this is a RANDOM private key used as a default value. do not use.
 		}
 
-		publicKey := privateKey.Public()
-		publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-		if !ok {
-			log.Fatal("error casting public key to ECDSA")
-		}
-		fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-		auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
-		if err != nil {
-			return nil, err
-		}
+		return *owner, nil
+	}()
 
-		if !isSimulatingGas {
-			auth.GasPrice = nil             // big.NewInt(10)  // Gas price to use for the transaction execution (nil = gas price oracle)
-			auth.GasFeeCap = big.NewInt(10) // big.NewInt(10) // Gas fee cap to use for the 1559 transaction execution (nil = gas price oracle)
-			auth.GasTipCap = big.NewInt(2)  // big.NewInt(2) // Gas priority fee cap to use for the 1559 transaction execution (nil = gas price oracle)
-			auth.GasLimit = 21000
-		}
-		auth.NoSend = true
-
-		return &Owner{
-			FromAddress:        fromAddress,
-			PublicKey:          nil,
-			TransactionOptions: auth,
-			IsDryRun:           true,
-		}, nil
+	if err != nil {
+		return nil, err
 	}
 
-	if owner == nil {
-		return nil, errors.New("no owner")
+	// trim leading "0x" if needed
+	if senderPk[0:2] == "0x" {
+		senderPk = senderPk[2:]
 	}
 
-	privateKey, err := crypto.HexToECDSA(*owner)
+	privateKey, err := crypto.HexToECDSA(senderPk)
 	if err != nil {
 		return nil, err
 	}
@@ -593,6 +653,14 @@ func PrepareAccount(owner *string, chainID *big.Int, noSend bool) (*Owner, error
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
 		return nil, err
+	}
+
+	auth.NoSend = noSend
+	if noSend && !isSimulatingGas {
+		auth.GasPrice = nil             // big.NewInt(10)  // Gas price to use for the transaction execution (nil = gas price oracle)
+		auth.GasFeeCap = big.NewInt(10) // big.NewInt(10) // Gas fee cap to use for the 1559 transaction execution (nil = gas price oracle)
+		auth.GasTipCap = big.NewInt(2)  // big.NewInt(2) // Gas priority fee cap to use for the 1559 transaction execution (nil = gas price oracle)
+		auth.GasLimit = 21000
 	}
 
 	return &Owner{
@@ -722,4 +790,304 @@ func SelectActiveValidators(
 		}
 	}
 	return activeValidators, nil
+}
+
+/// PREDEPLOY UTILS
+
+// CurrentConsolidationFee queries the EIP-7521 predeploy to get the current per-request fee in wei
+func CurrentConsolidationFee(client *ethclient.Client) (*big.Int, error) {
+	ctx := context.Background()
+
+	predeploy := newPredeploy(CONSOLIDATION_PREDEPLOY, client)
+
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting latest block number: %w", err)
+	}
+
+	msg := ethereum.CallMsg{
+		From: CONSOLIDATION_PREDEPLOY,
+		To:   &CONSOLIDATION_PREDEPLOY,
+		Data: []byte{},
+	}
+
+	result, err := predeploy.Caller.CallContract(ctx, msg, new(big.Int).SetUint64(blockNum))
+	if err != nil {
+		return nil, fmt.Errorf("error calling consolidation predeploy: %w", err)
+	}
+
+	if len(result) != 32 {
+		return nil, fmt.Errorf("predeploy error: expected 32 byte result, got %d bytes", len(result))
+	}
+
+	return new(big.Int).SetBytes(result), nil
+}
+
+// CurrentWithdrawalFee queries the EIP-7002 predeploy to get the current per-request fee in wei
+func CurrentWithdrawalFee(client *ethclient.Client) (*big.Int, error) {
+	ctx := context.Background()
+
+	predeploy := newPredeploy(WITHDRAWAL_PREDEPLOY, client)
+
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting latest block number: %w", err)
+	}
+
+	msg := ethereum.CallMsg{
+		From: WITHDRAWAL_PREDEPLOY,
+		To:   &WITHDRAWAL_PREDEPLOY,
+		Data: []byte{},
+	}
+
+	result, err := predeploy.Caller.CallContract(ctx, msg, new(big.Int).SetUint64(blockNum))
+	if err != nil {
+		return nil, fmt.Errorf("error calling withdrawal predeploy: %w", err)
+	}
+
+	if len(result) != 32 {
+		return nil, fmt.Errorf("predeploy error: expected 32 byte result, got %d bytes", len(result))
+	}
+
+	return new(big.Int).SetBytes(result), nil
+}
+
+// GetExcessConsolidationRequests reads EIP-7521 predeploy storage slot 0 to get the number of excess
+// requests currently in the queue.
+func GetExcessConsolidationRequests(client *ethclient.Client) (*big.Int, error) {
+	ctx := context.Background()
+
+	// Excess requests are at storage slot 0
+	result, err := client.StorageAt(ctx, CONSOLIDATION_PREDEPLOY, common.Hash{}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error reading storage: %w", err)
+	}
+
+	return new(big.Int).SetBytes(result), nil
+}
+
+// GetExcessConsolidationRequests reads EIP-7002 predeploy storage slot 0 to get the number of excess
+// requests currently in the queue.
+func GetExcessWithdrawalRequests(client *ethclient.Client) (*big.Int, error) {
+	ctx := context.Background()
+
+	// Excess requests are at storage slot 0
+	result, err := client.StorageAt(ctx, WITHDRAWAL_PREDEPLOY, common.Hash{}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error reading storage: %w", err)
+	}
+
+	return new(big.Int).SetBytes(result), nil
+}
+
+type PredeployFeeInfo struct {
+	CurrentQueueSize *big.Int
+	FeePerRequest    *big.Int
+	TotalFee         *big.Int
+	OverestimateFee  *big.Int
+}
+
+// EstimateConsolidationFeePerChunk estimates the consolidation fee required to submit multiple "chunks"
+// of consolidation requests. This method assumes the requests are submitted in sequential blocks,
+// with the system address updating the fee between each block.
+//
+// The returned array is the "fee per request" for each chunk
+func EstimateConsolidationFeePerChunk(
+	client *ethclient.Client,
+	requestChunks [][]EigenPod.IEigenPodTypesConsolidationRequest,
+) ([]*PredeployFeeInfo, error) {
+	curExcess, err := GetExcessConsolidationRequests(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting excess requests from predeploy: %w", err)
+	}
+
+	// feesPerChunk := make([]*big.Int, 0, len(requestChunks))
+	chunkInfo := make([]*PredeployFeeInfo, 0, len(requestChunks))
+
+	for _, chunk := range requestChunks {
+		fee := fakeExponential(
+			MIN_CONSOLIDATION_REQUEST_FEE,
+			curExcess,
+			CONSOLIDATION_REQUEST_FEE_UPDATE_FRACTION,
+		)
+
+		totalFee := new(big.Int).Mul(
+			big.NewInt(int64(len(chunk))),
+			fee,
+		)
+
+		chunkInfo = append(chunkInfo, &PredeployFeeInfo{
+			CurrentQueueSize: curExcess,
+			FeePerRequest:    fee,
+			TotalFee:         totalFee,
+			OverestimateFee:  totalFee,
+		})
+
+		// Simulate excess update across block boundary
+		// new_excess = max(0, curExcess + len(chunk) - MAX_DEQUEUE)
+		reqCount := big.NewInt(int64(len(chunk)))
+		curExcess.Add(curExcess, reqCount)
+		curExcess.Sub(curExcess, MAX_CONSOLIDATION_REQUESTS_PER_BLOCK)
+
+		if curExcess.Sign() == -1 {
+			curExcess.SetUint64(0)
+		}
+	}
+
+	return chunkInfo, nil
+}
+
+// EstimateWithdrawalFeePerChunk estimates the withdrawal fee required to submit multiple "chunks"
+// of withdrawal requests. This method assumes the requests are submitted in sequential blocks,
+// with the system address updating the fee between each block.
+//
+// The returned array is the "fee per request" for each chunk
+func EstimateWithdrawalFeePerChunk(
+	client *ethclient.Client,
+	requestChunks [][]EigenPod.IEigenPodTypesWithdrawalRequest,
+) ([]*PredeployFeeInfo, error) {
+	curExcess, err := GetExcessWithdrawalRequests(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting excess requests from predeploy: %w", err)
+	}
+
+	// feesPerChunk := make([]*big.Int, 0, len(requestChunks))
+	chunkInfo := make([]*PredeployFeeInfo, 0, len(requestChunks))
+
+	for _, chunk := range requestChunks {
+		fee := fakeExponential(
+			MIN_WITHDRAWAL_REQUEST_FEE,
+			curExcess,
+			WITHDRAWAL_REQUEST_FEE_UPDATE_FRACTION,
+		)
+
+		totalFee := new(big.Int).Mul(
+			big.NewInt(int64(len(chunk))),
+			fee,
+		)
+
+		chunkInfo = append(chunkInfo, &PredeployFeeInfo{
+			CurrentQueueSize: curExcess,
+			FeePerRequest:    fee,
+			TotalFee:         totalFee,
+			OverestimateFee:  totalFee,
+		})
+
+		// Simulate excess update across block boundary
+		// new_excess = max(0, curExcess + len(chunk) - MAX_DEQUEUE)
+		reqCount := big.NewInt(int64(len(chunk)))
+		curExcess.Add(curExcess, reqCount)
+		curExcess.Sub(curExcess, MAX_WITHDRAWAL_REQUESTS_PER_BLOCK)
+
+		if curExcess.Sign() == -1 {
+			curExcess.SetUint64(0)
+		}
+	}
+
+	return chunkInfo, nil
+}
+
+// GetConsolidationFeeInfoForRequest retrieves info on the current fees required
+// to submit consolidation requests.
+func GetConsolidationFeeInfoForRequest(
+	client *ethclient.Client,
+	request []EigenPod.IEigenPodTypesConsolidationRequest,
+	overestimateFactor float64,
+) (*PredeployFeeInfo, error) {
+	if overestimateFactor == 0 {
+		overestimateFactor = 1
+	}
+
+	curExcess, err := GetExcessConsolidationRequests(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting excess requests from predeploy: %w", err)
+	}
+
+	curFee, err := CurrentConsolidationFee(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting current consolidation fee: %w", err)
+	}
+
+	totalFee := new(big.Int).Mul(
+		big.NewInt(int64(len(request))),
+		curFee,
+	)
+
+	overestimatedFeeFloat := new(big.Float).Mul(
+		new(big.Float).SetInt(totalFee),
+		big.NewFloat(overestimateFactor), // e.g., 1.5
+	)
+
+	overestimatedFee := new(big.Int)
+	overestimatedFeeFloat.Int(overestimatedFee) // rounds down
+
+	return &PredeployFeeInfo{
+		CurrentQueueSize: curExcess,
+		FeePerRequest:    curFee,
+		TotalFee:         totalFee,
+		OverestimateFee:  overestimatedFee,
+	}, nil
+}
+
+// GetWithdrawalFeeInfoForRequest retrieves info on the current fees required
+// to submit withdrawal requests.
+func GetWithdrawalFeeInfoForRequest(
+	client *ethclient.Client,
+	request []EigenPod.IEigenPodTypesWithdrawalRequest,
+	overestimateFactor float64,
+) (*PredeployFeeInfo, error) {
+	if overestimateFactor == 0 {
+		overestimateFactor = 1
+	}
+
+	curExcess, err := GetExcessWithdrawalRequests(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting excess requests from predeploy: %w", err)
+	}
+
+	curFee, err := CurrentWithdrawalFee(client)
+	if err != nil {
+		return nil, fmt.Errorf("error getting current withdrawal fee: %w", err)
+	}
+
+	totalFee := new(big.Int).Mul(
+		big.NewInt(int64(len(request))),
+		curFee,
+	)
+
+	overestimatedFeeFloat := new(big.Float).Mul(
+		new(big.Float).SetInt(totalFee),
+		big.NewFloat(overestimateFactor), // e.g., 1.5
+	)
+
+	overestimatedFee := new(big.Int)
+	overestimatedFeeFloat.Int(overestimatedFee) // rounds down
+
+	return &PredeployFeeInfo{
+		CurrentQueueSize: curExcess,
+		FeePerRequest:    curFee,
+		TotalFee:         totalFee,
+		OverestimateFee:  overestimatedFee,
+	}, nil
+}
+
+// fakeExponential implements the EIP-7521 and EIP-7002 exponential fee increase formula
+// (see https://eips.ethereum.org/EIPS/eip-7251#fee-calculation)
+func fakeExponential(factor, numerator, denominator *big.Int) *big.Int {
+	i := big.NewInt(1)
+	output := big.NewInt(0)
+	numAccum := new(big.Int).Mul(factor, denominator) // numerator_accum = factor * denominator
+
+	for numAccum.Cmp(big.NewInt(0)) > 0 {
+		output.Add(output, numAccum)
+
+		// numAccum = (numAccum * numerator) // (denominator * i)
+		numAccum.Mul(numAccum, numerator)
+		denomProd := new(big.Int).Mul(denominator, i)
+		numAccum.Div(numAccum, denomProd)
+
+		i.Add(i, big.NewInt(1))
+	}
+
+	return output.Div(output, denominator)
 }

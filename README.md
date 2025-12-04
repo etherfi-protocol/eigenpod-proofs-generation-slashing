@@ -8,9 +8,9 @@ At all times, refer to the `mainnet`, `testnet`, and `preprod` git tags to under
 
 | Environment    |     Version   |
 | -------------- | ------------- |
-| Mainnet        |       [0.3.6](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/0.3.6) |
-| Testnet        |       [1.3.0](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/1.3.0) |
-| Preprod        |       [1.3.0](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/1.3.0) |
+| Mainnet                 |       [v1.6.1](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/v1.6.1) |
+| Testnet(Hoodi & Holesky)|       [v1.6.1](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/v1.6.1) |
+| Preprod                 |       [v1.6.1](https://github.com/Layr-Labs/eigenpod-proofs-generation/releases/tag/v1.6.1) |
 
 # Introduction
 
