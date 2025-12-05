@@ -30,7 +30,7 @@ type EigenPodProofs struct {
 // chainID is the chain ID of the chain that the EigenPodProofs instance will be used for.
 // oracleStateCacheExpirySeconds is the expiry time for the oracle state cache in seconds. After this time caches of beacon state roots, validator trees and validator balances trees will be evicted.
 func NewEigenPodProofs(chainID uint64, oracleStateCacheExpirySeconds int) (*EigenPodProofs, error) {
-	if chainID != 1 && chainID != 17000 {
+	if chainID != 1 && chainID != 17000 && chainID != 560048 {
 		return nil, errors.New("chainID not supported")
 	}
 
@@ -77,6 +77,18 @@ func (epp *EigenPodProofs) ComputeBeaconStateRoot(state *spec.VersionedBeaconSta
 	var beaconStateRoot phase0.Root
 	var err error
 	switch state.Version {
+	case spec.DataVersionFulu:
+		beaconState := state.Fulu
+		beaconStateRoot, err = epp.loadOrComputeBeaconStateRoot(
+			beaconState.Slot,
+			func() (phase0.Root, error) {
+				stateRoot, err := beaconState.HashTreeRoot()
+				if err != nil {
+					return phase0.Root{}, err
+				}
+				return stateRoot, nil
+			},
+		)
 	case spec.DataVersionElectra:
 		beaconState := state.Electra
 		beaconStateRoot, err = epp.loadOrComputeBeaconStateRoot(
@@ -137,6 +149,8 @@ func (epp *EigenPodProofs) ComputeBeaconStateTopLevelRoots(beaconState *spec.Ver
 
 func (epp *EigenPodProofs) ComputeVersionedBeaconStateTopLevelRoots(beaconState *spec.VersionedBeaconState) (*beacon.VersionedBeaconStateTopLevelRoots, error) {
 	switch beaconState.Version {
+	case spec.DataVersionFulu:
+		return beacon.ComputeBeaconStateTopLevelRootsFulu(beaconState.Fulu)
 	case spec.DataVersionElectra:
 		return beacon.ComputeBeaconStateTopLevelRootsElectra(beaconState.Electra)
 	case spec.DataVersionDeneb:

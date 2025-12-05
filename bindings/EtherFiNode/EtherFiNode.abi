@@ -36,6 +36,19 @@
   },
   {
     "type": "function",
+    "name": "BEACON_ETH_STRATEGY_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "EIGENLAYER_WITHDRAWAL_DELAY_BLOCKS",
     "inputs": [],
     "outputs": [
@@ -43,32 +56,6 @@
         "name": "",
         "type": "uint32",
         "internalType": "uint32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "ETHERFI_NODE_CALL_FORWARDER_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "ETHERFI_NODE_EIGENLAYER_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
       }
     ],
     "stateMutability": "view"
@@ -330,6 +317,56 @@
   },
   {
     "type": "function",
+    "name": "requestConsolidation",
+    "inputs": [
+      {
+        "name": "requests",
+        "type": "tuple[]",
+        "internalType": "struct IEigenPodTypes.ConsolidationRequest[]",
+        "components": [
+          {
+            "name": "srcPubkey",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "targetPubkey",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "requestExecutionLayerTriggeredWithdrawal",
+    "inputs": [
+      {
+        "name": "requests",
+        "type": "tuple[]",
+        "internalType": "struct IEigenPodTypes.WithdrawalRequest[]",
+        "components": [
+          {
+            "name": "pubkey",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "amountGwei",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "roleRegistry",
     "inputs": [],
     "outputs": [
@@ -563,7 +600,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidCaller",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidForwardedCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoCompleteableWithdrawals",
     "inputs": []
   },
   {
