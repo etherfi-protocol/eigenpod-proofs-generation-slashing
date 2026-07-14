@@ -634,14 +634,10 @@ func PrepareAccount(owner *string, chainID *big.Int, noSend bool) (*Owner, error
 		if err != nil {
 			return nil, fmt.Errorf("creating kms transactor: %w", err)
 		}
-		pubKey, err := ethawskmssigner.GetPubKeyCtx(ctx, kmsClient, keyId)
-		if err != nil {
-			return nil, fmt.Errorf("fetching kms public key: %w", err)
-		}
 		auth.NoSend = noSend
+		// PublicKey stays nil: no call path reads it
 		return &Owner{
 			FromAddress:        auth.From,
-			PublicKey:          pubKey,
 			TransactionOptions: auth,
 			IsDryRun:           noSend,
 		}, nil
