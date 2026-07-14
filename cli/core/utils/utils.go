@@ -17,6 +17,10 @@ import (
 
 	lo "github.com/samber/lo"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	ethawskmssigner "github.com/welthee/go-ethereum-aws-kms-tx-signer/v2"
+
 	"github.com/Layr-Labs/eigenlayer-contracts/pkg/bindings/EigenPod"
 	eigenpodproofs "github.com/Layr-Labs/eigenpod-proofs-generation"
 	"github.com/Layr-Labs/eigenpod-proofs-generation/bindings/EtherFiNodesManager"
@@ -616,6 +620,29 @@ func PanicIfNoConsent(prompt string) {
 }
 
 func PrepareAccount(owner *string, chainID *big.Int, noSend bool) (*Owner, error) {
+	// owner values of the form "kms:<key-id-or-alias>" sign via AWS KMS instead of
+	// a raw private key; AWS credentials come from the ambient environment.
+	if owner != nil && strings.HasPrefix(*owner, "kms:") {
+		ctx := context.Background()
+		keyId := strings.TrimPrefix(*owner, "kms:")
+		awsCfg, err := awsconfig.LoadDefaultConfig(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("loading aws config: %w", err)
+		}
+		kmsClient := kms.NewFromConfig(awsCfg)
+		auth, err := ethawskmssigner.NewAwsKmsTransactorWithChainIDCtx(ctx, kmsClient, keyId, chainID)
+		if err != nil {
+			return nil, fmt.Errorf("creating kms transactor: %w", err)
+		}
+		auth.NoSend = noSend
+		// PublicKey stays nil: no call path reads it
+		return &Owner{
+			FromAddress:        auth.From,
+			TransactionOptions: auth,
+			IsDryRun:           noSend,
+		}, nil
+	}
+
 	isSimulatingGas := owner != nil && *owner != ""
 	senderPk, err := func() (string, error) {
 		// if we're trying to send a transaction, make sure we were supplied a private key
